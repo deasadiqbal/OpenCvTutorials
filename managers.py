@@ -36,7 +36,7 @@ class CaptureManager(object):
     def frame(self):
         if self._enteredFrame and self._frame is None:
             _, self._frame = self._capture.retrieve(
-            channel = self.chennel
+            self._frame, self.channel
                 )
         return self._frame
         
@@ -122,23 +122,29 @@ class CaptureManager(object):
         self._videoWriter.write(self.frame)
 
 class WindowManager(object):
-    def __init__(self, windowName, keypressCallback = None):
+    def __init__(self, windowName, keypressCallback=None):
         self.keypressCallback = keypressCallback
         self._windowName = windowName
         self._isWindowCreated = False
 
     @property
     def isWindowCreated(self):
-        return self.isWindowCreated
+        return self._isWindowCreated
     def createWindow(self):
-        cv2.nameWindow(self._windowName)
+        cv2.namedWindow(self._windowName)
         self._isWindowCreated = True
     def show(self, frame):
         cv2.imshow(self._windowName, frame)
+
     def destroyWindow(self):
         cv2.destroyWindow(self._windowName)
         self._isWindowCreated = False
+
     def processEvents(self):
         keycode = cv2.waitKey(1)
         if self.keypressCallback is not None and keycode != -1:
             self.keypressCallback(keycode)
+
+
+
+
