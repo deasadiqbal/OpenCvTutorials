@@ -92,6 +92,53 @@ class CaptureManager(object):
     def writeImage(self, filename):
         self._imageFilename = filename
 
+    def startWritingVideo(self, filename,
+                          encoding = cv2.VideoWriter_fourcc('M','J','P','G')):
+        self._videoFilename = filename
+        self._videoEncoding = encoding
     
-                
+    def stopWritingVideo(self):
+        self._videoFilename = None
+        self._videoEncoding = None
+        self._videoWriter = None
+    
+    # implemenation of helper method _writeVideoFrame
+    def _writeVideoFrame(self):
+        if not self.isWritingVideo:
+            return
+        if self._videoWriter is None:
+            fps = self._capture.get(cv2.CAP_PROP_FPS)
+            if fps <= 0.0:
+                if self._framesElapsed < 20:
+                    return
+                else:
+                    fps = self._fpsEstimate
+            width = self._capture.get(cv2.CAP_PROP_FRAME_WIDTH)
+            height = self._capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
+            size = (int(width),int(height))
+            self._videoWriter = cv2.VideoWriter(
+                self._videoFilename, self._videoEncoding, fps, size
+            )
+        self._videoWriter.write(self.frame)
 
+class WindowManager(object):
+    def __init__(self, windowName, keypressCallback = None):
+        self.keypressCallback = keypressCallback
+        self._windowName = windowName
+        self._isWindowCreated = False
+
+    @property
+    def isWindowCreated(self):
+        return self.isWindowCreated
+    def createWindow(self):
+        cv2.nameWindow(self._windowName)
+        self._isWindowCreated = True
+    def show(self, frame):
+        cv2.imshow(self._windowName, frame)
+    def destroyWindow(self):
+        cv2.destroyWindow(self._windowName)
+        self._isWindowCreated = False
+    def processEvents(self):
+        keycode = cv2.waitKey(1)
+        if self.keypressCallback is not None and keycode != -1:
+            self.keypressCallback(keycode)
